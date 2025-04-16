@@ -11,9 +11,18 @@ for col in cleandf.columns:
     print(col)
 
 # TO DO: make sure to make booleans(cols with 1s and 0s) 50/50 before below
+substring = 'first'
+bool_cols = [item for item in cleandf.columns if substring in item]
+print(bool_cols)
+print(len(bool_cols))
+for col in bool_cols:
+    print(df[col].unique())
 
+#for col in bool_cols:
 
-# begin cleaning data by first replacing nan with either median values for numerical cols or 'missing'
+    
+
+# begin cleaning data by first replacing remaining nan with either median values for numerical cols or 'missing'
 def fill_na_by_type(dataframe):
     for col in dataframe.columns:
         if np.issubdtype(dataframe[col].dtype, np.number):
