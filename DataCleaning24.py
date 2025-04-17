@@ -10,9 +10,11 @@ cleandf = df
 for col in cleandf.columns:
     print(col)
 
-# TO DO: make sure to make booleans(cols with 1s and 0s) 50/50 before below
+# Make sure to make booleans(cols with 1s and 0s) 50/50 before below
 substring = 'first'
-bool_cols = [item for item in cleandf.columns if substring in item]
+substring2 = 'result'
+substring3 = 'playoffs'
+bool_cols = [item for item in cleandf.columns if substring or substring2 or substring3 in item]
 print(bool_cols)
 
 for col in cleandf.columns:
@@ -21,9 +23,6 @@ for col in cleandf.columns:
             pd.Series(np.random.choice([1, 0], size = cleandf[col].isna().sum()),
                 index = cleandf[col][cleandf[col].isna()].index)
         )
-
-for col in bool_cols:
-    print(df[col].unique())
 
 # begin cleaning data by first replacing remaining nan with either median values for numerical cols or 'missing'
 def fill_na_by_type(dataframe):
@@ -34,7 +33,6 @@ def fill_na_by_type(dataframe):
             dataframe[col].fillna('missing', inplace = True)
 
 fill_na_by_type(cleandf)
-print(cleandf.isna().sum().to_string())
 
 # assign major and minor league labels in a new column
 def assign_mm_league(league):
@@ -44,9 +42,11 @@ def assign_mm_league(league):
         return 'minor'
 cleandf['leaguetype'] = cleandf['league'].apply(assign_mm_league)
 
-print(cleandf['leaguetype'])
+# remove useless cols and then split into multiple df's for analysis
+cleandf = cleandf.drop(['datacompleteness', 'url', 'patch', 'year'], axis = 1)
 
-# filter out poor/low quality data 
+# df for team related analysis
 
+# df for player related analysis
 
 
