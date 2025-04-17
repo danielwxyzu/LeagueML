@@ -14,13 +14,16 @@ for col in cleandf.columns:
 substring = 'first'
 bool_cols = [item for item in cleandf.columns if substring in item]
 print(bool_cols)
-print(len(bool_cols))
+
+for col in cleandf.columns:
+    if col in bool_cols:
+        cleandf[col] = cleandf[col].fillna(
+            pd.Series(np.random.choice([1, 0], size = cleandf[col].isna().sum()),
+                index = cleandf[col][cleandf[col].isna()].index)
+        )
+
 for col in bool_cols:
     print(df[col].unique())
-
-#for col in bool_cols:
-
-    
 
 # begin cleaning data by first replacing remaining nan with either median values for numerical cols or 'missing'
 def fill_na_by_type(dataframe):
@@ -41,7 +44,9 @@ def assign_mm_league(league):
         return 'minor'
 cleandf['leaguetype'] = cleandf['league'].apply(assign_mm_league)
 
-# filter out poor data 
+print(cleandf['leaguetype'])
+
+# filter out poor/low quality data 
 
 
 
