@@ -44,9 +44,25 @@ cleandf['leaguetype'] = cleandf['league'].apply(assign_mm_league)
 
 # remove useless cols and then split into multiple df's for analysis
 cleandf = cleandf.drop(['datacompleteness', 'url', 'patch', 'year'], axis = 1)
-
+for col in cleandf.columns:
+    print(col)
 # df for team related analysis
+teamdf = cleandf[cleandf['position'] == 'team'].copy()
+teamdf.drop(['playername', 'playerid', 'champion',
+             'firstbloodkill', 'firstbloodassist', 'firstbloodvictim',
+             'dragons (type unkown)', 'earnedgoldshare', 
+             'monsterkillsownjungle','monsterkillsenemyjungle'], axis = 1, inplace = True)
+
 
 # df for player related analysis
+playerdf = cleandf[cleandf['position'] != 'team'].copy()
+playerdf.drop(['firstdragon','dragons','opp_dragons',
+'elementaldrakes','opp_elementaldrakes','infernals','mountains','clouds',
+'oceans','chemtechs','hextechs','dragons (type unknown)','elders',
+'opp_elders','firstherald','heralds','opp_heralds','firstbaron','barons',
+'opp_barons','firsttower','towers','opp_towers','firstmidtower',
+'firsttothreetowers','turretplates','opp_turretplates','inhibitors',
+'opp_inhibitors', 'monsterkillsownjungle', 'monsterkillsenemyjungle'], axis = 1, inplace = True)
+
 
 
