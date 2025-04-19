@@ -48,9 +48,8 @@ for col in cleandf.columns:
     print(col)
 # df for team related analysis
 teamdf = cleandf[cleandf['position'] == 'team'].copy()
-teamdf.drop(['playername', 'playerid', 'champion',
-             'firstbloodkill', 'firstbloodassist', 'firstbloodvictim',
-             'dragons (type unkown)', 'earnedgoldshare', 
+teamdf.drop(['playername', 'playerid', 'champion','firstbloodkill', 
+             'firstbloodassist', 'firstbloodvictim','earnedgoldshare', 
              'monsterkillsownjungle','monsterkillsenemyjungle'], axis = 1, inplace = True)
 
 
@@ -64,5 +63,6 @@ playerdf.drop(['firstdragon','dragons','opp_dragons',
 'firsttothreetowers','turretplates','opp_turretplates','inhibitors',
 'opp_inhibitors', 'monsterkillsownjungle', 'monsterkillsenemyjungle'], axis = 1, inplace = True)
 
-
+playerdf.to_csv('playerdata', index=False)
+teamdf.to_csv('teamdata', index=False)
 
