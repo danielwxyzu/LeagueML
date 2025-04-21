@@ -85,6 +85,8 @@ plt.show()
 plot corr mx of broader df's where target is result
 not using .abs() because a lot of columns are just opposites 
 i.e. barons vs opp_barons which have the same corr but in opposite directions
+
+focusing on team performance for now
 '''
 target = 'result'
 top_n = 20
@@ -126,5 +128,90 @@ ax = sns.heatmap(
 plt.xticks(rotation=45, ha='right', fontsize=10)
 plt.yticks(fontsize=10)
 plt.title(f'{bot_n} Correlations w/ {target}')
+plt.tight_layout()
+plt.show()
+
+#split teamdf into other cuts such as tiers (minor/major)
+majorleague = teamdf[teamdf['leaguetype'] == 'major'].copy()
+minorleague = teamdf[teamdf['leaguetype'] == 'minor'].copy()
+
+target = 'result'
+top_n = 20
+corr_matrix = majorleague.corr(numeric_only=True)
+
+top_corr = corr_matrix[target].sort_values(ascending=False).head(top_n)
+subset = corr_matrix.loc[top_corr.index, top_corr.index]
+
+plt.figure(figsize=(12,10))
+ax = sns.heatmap(
+    subset,
+    annot=True,
+    cmap='coolwarm',
+    linewidths=0.5
+)
+
+plt.xticks(rotation=45, ha='right', fontsize=10)
+plt.yticks(fontsize=10)
+plt.title(f'Top {top_n} Correlations w/ {target} Major League Teams')
+plt.tight_layout()
+
+target = 'result'
+bot_n = 20
+corr_matrix = majorleague.corr(numeric_only=True)
+
+bot_corr = corr_matrix[target].sort_values(ascending=True).head(bot_n)
+subset = corr_matrix.loc[bot_corr.index, bot_corr.index]
+
+plt.figure(figsize=(12,10))
+ax = sns.heatmap(
+    subset,
+    annot=True,
+    cmap='RdBu',
+    linewidths=0.5
+)
+
+plt.xticks(rotation=45, ha='right', fontsize=10)
+plt.yticks(fontsize=10)
+plt.title(f'Bottom {bot_n} Correlations w/ {target} for Major League Teams')
+plt.tight_layout()
+
+target = 'result'
+top_n = 20
+corr_matrix = minorleague.corr(numeric_only=True)
+
+top_corr = corr_matrix[target].sort_values(ascending=False).head(top_n)
+subset = corr_matrix.loc[top_corr.index, top_corr.index]
+
+plt.figure(figsize=(12,10))
+ax = sns.heatmap(
+    subset,
+    annot=True,
+    cmap='coolwarm',
+    linewidths=0.5
+)
+
+plt.xticks(rotation=45, ha='right', fontsize=10)
+plt.yticks(fontsize=10)
+plt.title(f'Top {top_n} Correlations w/ {target} for Minor League Teams')
+plt.tight_layout()
+
+target = 'result'
+bot_n = 20
+corr_matrix = minorleague.corr(numeric_only=True)
+
+bot_corr = corr_matrix[target].sort_values(ascending=True).head(bot_n)
+subset = corr_matrix.loc[bot_corr.index, bot_corr.index]
+
+plt.figure(figsize=(12,10))
+ax = sns.heatmap(
+    subset,
+    annot=True,
+    cmap='RdBu',
+    linewidths=0.5
+)
+
+plt.xticks(rotation=45, ha='right', fontsize=10)
+plt.yticks(fontsize=10)
+plt.title(f'Bottom {bot_n} Correlations w/ {target} For Minor League Teams')
 plt.tight_layout()
 plt.show()
