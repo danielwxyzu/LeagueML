@@ -62,12 +62,12 @@ def calc_player_wr(result_col):
 
 calc_team_wr(teamdf['result'])
 calc_player_wr(playerdf['result'])
-'''
+
 team_wl_record.head()
 player_wl_record.head()
 team_wl_record.describe()
 player_wl_record.describe()
-'''
+
 
 # check distributions
 team_wl_record['wr%'].plot.hist(bins = 7, alpha = 0.5, density = False)
