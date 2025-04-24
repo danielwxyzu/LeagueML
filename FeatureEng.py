@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 teamdf = pd.read_csv('Data/teamdata')
 
@@ -18,7 +19,6 @@ for col in teamdf.columns:
 
 # calculate rolling average of most recent 5 games
 teamdf['date'] = pd.to_datetime(teamdf['date'])
-
 teamdf['recent_form'] = (
     teamdf.sort_values(['teamname', 'date'])
       .groupby('teamname')['result']
@@ -50,8 +50,45 @@ teamdf['weighted_objective_diff'] = (
 substring = 'at15'
 substring2 = 'at10'
 for col in teamdf.columns:
-    if substring or substring2 in col:
+    if substring in col or substring2 in col:
         print(col)
+
+cols_to_scale = [
+'golddiffat10',
+'xpdiffat10',
+'csdiffat10',
+
+'killsat10',
+'opp_killsat10',
+
+'assistsat10',
+'opp_assistsat10',
+
+'deathsat10',
+'opp_deathsat10',
+#
+'golddiffat15',
+'xpdiffat15',
+'csdiffat15',
+
+'killsat15',
+'opp_killsat15',
+
+'assistsat15',
+'opp_assistsat15',
+
+'deathsat15',
+'opp_deathsat15'
+]
+scaler = StandardScaler()
+scaled = scaler.fit_transform(teamdf[cols_to_scale])
+
+scaled_df = teamdf.copy()
+scaled_df[cols_to_scale] = scaled
+
+scaled_df['killsdiffat10'] = scaled_df['killsat10'] - scaled_df['opp_killsat10']
+
+
 
 '''
 calculate metric for absolute gamestate @ 15
