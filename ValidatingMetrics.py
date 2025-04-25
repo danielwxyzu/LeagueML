@@ -1,23 +1,17 @@
+'''
+Seperate python file for the sake of organization and not having to run a large python file
+Evaluating linearity assumptions of data for feature engineering purposes
+'''
+
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 
 teamdf = pd.read_csv('Data/teamdata')
 
-'''
-What features can we add to the df which would provide better insight into w/l probability?
-- Rolling averages i.e. most recent 5 games
-- Multi kills metric
-- Objective control metric
-- Gamestate @ 15 or @ 10
-
-Maybe the multi kills metric can get collapsed into a micro game score 
-and the obj control can get collapsed into a macro game score
-'''
-for col in teamdf.columns:
-    print(col)
-
-# calculate rolling average of most recent 5 games
+# rolling avg metric
 teamdf['date'] = pd.to_datetime(teamdf['date'])
 teamdf['recent_form'] = (
     teamdf.sort_values(['teamname', 'date'])
@@ -43,6 +37,23 @@ teamdf['weighted_objective_diff'] = (
     (teamdf['turretplates'] - teamdf['opp_turretplates']) +
     (teamdf['inhibitors'] - teamdf['opp_inhibitors']) * 2
 )
+
+fig, axs = plt.subplots(3, 1, figsize=(8, 10))
+
+axs[0].scatter(teamdf['result'], teamdf['recent_form'], color='blue')
+axs[0].set_title('Recent Form vs Result')
+axs[0].set_xticks([0, 1])
+
+axs[1].scatter(teamdf['result'], teamdf['weighted_multikill'], color='green')
+axs[1].set_title('Multi Kill vs Result')
+axs[1].set_xticks([0, 1])
+
+axs[2].scatter(teamdf['result'], teamdf['weighted_objective_diff'], color='red')
+axs[2].set_title('Obj Diff vs Result')
+axs[2].set_xticks([0, 1])
+
+plt.tight_layout()
+plt.show()
 
 # game state at 10/15
 substring = 'at15'
@@ -107,15 +118,20 @@ scaled_df['gamestateat15'] = (scaled_df['golddiffat15'] +
                               scaled_df['assistdiffat15'] +
                               scaled_df['deathdiffat15'])
 
+teamdf['gamestateat10'] = scaled_df['gamestateat10']
+teamdf['gamestateat15'] = scaled_df['gamestateat15']
 
+teamdf['bin'] = pd.qcut(teamdf['gamestateat15'], q=10)
 
+# Compute win rate and log-odds per bin
+bin_stats = teamdf.groupby('bin')['result'].agg(['mean']).rename(columns={'mean': 'win_rate'})
+bin_stats['log_odds'] = np.log(bin_stats['win_rate'] / (1 - bin_stats['win_rate']))
 
-'''
-calculate metric for absolute gamestate @ 15
-- find diff between necessary items and then scale all items then add them?
-- in order to scale we can do standardization (z-score normalization) 
-        - only for lin models that have normally distributed data
-- or min-max scaling for distance related models like KNN
-- no need to scale for random forest, could be useful to scale the feature anyways
-'''
-
+# Plot log-odds vs bin midpoint
+bin_centers = teamdf.groupby('bin')['gamestateat15'].mean()
+plt.plot(bin_centers, bin_stats['log_odds'], marker='o')
+plt.xlabel('Gamestate @ 15 (bin center)')
+plt.ylabel('Log-Odds of Win')
+plt.title('Linearity Check: Gamestate@15 vs Log-Odds of Win')
+plt.grid(True)
+plt.show()
