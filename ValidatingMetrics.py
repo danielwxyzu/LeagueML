@@ -19,7 +19,7 @@ teamdf['recent_form'] = (
       .transform(lambda x: x.shift(1).rolling(window=5).mean()))
 teamdf['recent_form'] = teamdf['recent_form'].fillna(teamdf['result'])
 
-# multikills metric
+# multikills metric (failed linearity test)
 teamdf['weighted_multikill'] = (
     1 * teamdf['doublekills'] +
     2 * teamdf['triplekills'] +
@@ -28,6 +28,7 @@ teamdf['weighted_multikill'] = (
 )
 
 # objective control metric
+# can be improved because I don't think individual dragons matter until a team gets soul or soul point
 teamdf['weighted_objective_diff'] = (
     (teamdf['dragons'] - teamdf['opp_dragons']) +
     (teamdf['elders'] - teamdf['opp_elders']) * 2 +
@@ -37,23 +38,6 @@ teamdf['weighted_objective_diff'] = (
     (teamdf['turretplates'] - teamdf['opp_turretplates']) +
     (teamdf['inhibitors'] - teamdf['opp_inhibitors']) * 2
 )
-
-fig, axs = plt.subplots(3, 1, figsize=(8, 10))
-
-axs[0].scatter(teamdf['result'], teamdf['recent_form'], color='blue')
-axs[0].set_title('Recent Form vs Result')
-axs[0].set_xticks([0, 1])
-
-axs[1].scatter(teamdf['result'], teamdf['weighted_multikill'], color='green')
-axs[1].set_title('Multi Kill vs Result')
-axs[1].set_xticks([0, 1])
-
-axs[2].scatter(teamdf['result'], teamdf['weighted_objective_diff'], color='red')
-axs[2].set_title('Obj Diff vs Result')
-axs[2].set_xticks([0, 1])
-
-plt.tight_layout()
-plt.show()
 
 # game state at 10/15
 substring = 'at15'
@@ -121,13 +105,12 @@ scaled_df['gamestateat15'] = (scaled_df['golddiffat15'] +
 teamdf['gamestateat10'] = scaled_df['gamestateat10']
 teamdf['gamestateat15'] = scaled_df['gamestateat15']
 
-teamdf['bin'] = pd.qcut(teamdf['gamestateat15'], q=10)
 
-# Compute win rate and log-odds per bin
+# calculating log odds and checking for linearity with new features
+teamdf['bin'] = pd.qcut(teamdf['gamestateat15'], q=10)
 bin_stats = teamdf.groupby('bin')['result'].agg(['mean']).rename(columns={'mean': 'win_rate'})
 bin_stats['log_odds'] = np.log(bin_stats['win_rate'] / (1 - bin_stats['win_rate']))
 
-# Plot log-odds vs bin midpoint
 bin_centers = teamdf.groupby('bin')['gamestateat15'].mean()
 plt.plot(bin_centers, bin_stats['log_odds'], marker='o')
 plt.xlabel('Gamestate @ 15 (bin center)')
@@ -135,3 +118,56 @@ plt.ylabel('Log-Odds of Win')
 plt.title('Linearity Check: Gamestate@15 vs Log-Odds of Win')
 plt.grid(True)
 plt.show()
+#______________________________________________________________________________________________
+
+teamdf['bin'] = pd.qcut(teamdf['gamestateat10'], q=10)
+bin_stats = teamdf.groupby('bin')['result'].agg(['mean']).rename(columns={'mean': 'win_rate'})
+bin_stats['log_odds'] = np.log(bin_stats['win_rate'] / (1 - bin_stats['win_rate']))
+
+bin_centers = teamdf.groupby('bin')['gamestateat10'].mean()
+plt.plot(bin_centers, bin_stats['log_odds'], marker='o')
+plt.xlabel('Gamestate @ 10 (bin center)')
+plt.ylabel('Log-Odds of Win')
+plt.title('Linearity Check: Gamestate@10 vs Log-Odds of Win')
+plt.grid(True)
+plt.show()
+#______________________________________________________________________________________________
+
+teamdf['bin'] = pd.qcut(teamdf['recent_form'], q=10)
+bin_stats = teamdf.groupby('bin')['result'].agg(['mean']).rename(columns = {'mean':'win_rate'})
+bin_stats['log_odds'] = np.log(bin_stats['win_rate'] / (1 - bin_stats['win_rate']))
+
+bin_centers = teamdf.groupby('bin')['recent_form'].mean()
+plt.plot(bin_centers, bin_stats['log_odds'], marker='o')
+plt.xlabel('Rolling Avg of Recent 5 Games (bin center)')
+plt.ylabel('Log-Odds of Win')
+plt.title('Linearity Check: Recent Performance vs Log-Odds of Win')
+plt.grid(True)
+plt.show()
+#______________________________________________________________________________________________
+
+teamdf['bin'] = pd.qcut(teamdf['weighted_multikill'], q=10, duplicates='drop')
+bin_stats = teamdf.groupby('bin')['result'].agg(['mean']).rename(columns = {'mean':'win_rate'})
+bin_stats['log_odds'] = np.log(bin_stats['win_rate'] / (1 - bin_stats['win_rate']))
+
+bin_centers = teamdf.groupby('bin')['weighted_multikill'].mean()
+plt.plot(bin_centers, bin_stats['log_odds'], marker='o')
+plt.xlabel('Weighted Multikills (bin center)')
+plt.ylabel('Log-Odds of Win')
+plt.title('Linearity Check: Weighted Multikill vs Log-Odds of Win')
+plt.grid(True)
+plt.show()
+#______________________________________________________________________________________________
+
+teamdf['bin'] = pd.qcut(teamdf['weighted_objective_diff'], q=10)
+bin_stats = teamdf.groupby('bin')['result'].agg(['mean']).rename(columns = {'mean':'win_rate'})
+bin_stats['log_odds'] = np.log(bin_stats['win_rate'] / (1 - bin_stats['win_rate']))
+
+bin_centers = teamdf.groupby('bin')['weighted_objective_diff'].mean()
+plt.plot(bin_centers, bin_stats['log_odds'], marker='o')
+plt.xlabel('Weighted Objective Difference (bin center)')
+plt.ylabel('Log-Odds of Win')
+plt.title('Linearity Check: Weighted Objective Diff vs Log-Odds of Win')
+plt.grid(True)
+plt.show()
+#______________________________________________________________________________________________
