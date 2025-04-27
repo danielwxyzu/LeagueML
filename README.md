@@ -8,5 +8,5 @@ The other data set found within the 'old files' folder is pulled directly from G
 Some goals for this project:
 - Finish development in time for League of Legends Worlds '25 pick'ems
 - Be able to prompt with two teams that are going head to head and return a probability of who will win
-- Find other interesting points of insight hidden within the data!
-- Become a more curious and skilled 'problem solver'
+- Find other interesting points of insight hidden within the data
+- Become better at structuring problems and then solving them
