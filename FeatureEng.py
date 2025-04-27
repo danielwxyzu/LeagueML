@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 teamdf = pd.read_csv('Data/teamdata')
 
@@ -33,16 +35,19 @@ teamdf['weighted_multikill'] = (
     4 * teamdf['pentakills']
 )
 
-# objective control metric
+
+# adjust obj control metric to look at if a team gets soul or not rather than number of dragons
+teamdf['dragonsoul'] = (teamdf['dragons'] == 4).astype(int)
 teamdf['weighted_objective_diff'] = (
-    (teamdf['dragons'] - teamdf['opp_dragons']) +
-    (teamdf['elders'] - teamdf['opp_elders']) * 2 +
-    (teamdf['heralds'] - teamdf['opp_heralds']) +
+    (teamdf['dragonsoul']) * 3 + 
+    (teamdf['elders'] - teamdf['opp_elders']) * 3 +
     (teamdf['barons'] - teamdf['opp_barons']) * 2 +
+    (teamdf['heralds'] - teamdf['opp_heralds']) +
     (teamdf['towers'] - teamdf['opp_towers']) +
     (teamdf['turretplates'] - teamdf['opp_turretplates']) +
-    (teamdf['inhibitors'] - teamdf['opp_inhibitors']) * 2
+    (teamdf['inhibitors'] - teamdf['opp_inhibitors'])
 )
+
 
 # game state at 10/15
 substring = 'at15'
@@ -108,14 +113,81 @@ scaled_df['gamestateat15'] = (scaled_df['golddiffat15'] +
                               scaled_df['deathdiffat15'])
 
 
+# what if you scaled everything and recalculated? would there be a significant difference?
+teamdf['dragonsoul'] = (teamdf['dragons'] == 4).astype(int)
 
+temp_binary_columns = ['dragonsoul'] #next add first to three towers, first mid tower, etc.
+continuous_columns = [col for col in teamdf.select_dtypes('number').columns if col not in temp_binary_columns]
 
-'''
-calculate metric for absolute gamestate @ 15
-- find diff between necessary items and then scale all items then add them?
-- in order to scale we can do standardization (z-score normalization) 
-        - only for lin models that have normally distributed data
-- or min-max scaling for distance related models like KNN
-- no need to scale for random forest, could be useful to scale the feature anyways
-'''
+scaler = StandardScaler()
+scaled_continuous = scaler.fit_transform(teamdf[continuous_columns])
 
+scaled_df = teamdf.copy()
+scaled_df[continuous_columns] = scaled_continuous  
+
+weights = {
+    'dragonsoul': 0.36,  
+    'elders': 0.075,
+    'barons': 0.62,
+    'inhibitors': 0.76,
+    'heralds': 0.24,
+    'towers': 0.89,
+    'turretplates': 0.26
+}
+
+# Create weighted objective difference
+scaled_df['weighted_objective_diff'] = (
+    (weights['dragonsoul'] * scaled_df['dragonsoul']) +
+    (weights['elders'] * (scaled_df['elders'] - scaled_df['opp_elders'])) +
+    (weights['barons'] * (scaled_df['barons'] - scaled_df['opp_barons'])) +
+    (weights['heralds'] * (scaled_df['heralds'] - scaled_df['opp_heralds'])) +
+    (weights['towers'] * (scaled_df['towers'] - scaled_df['opp_towers'])) +
+    (weights['turretplates'] * (scaled_df['turretplates'] - scaled_df['opp_turretplates'])) +
+    (weights['inhibitors'] * (scaled_df['inhibitors'] - scaled_df['opp_inhibitors']))
+)
+teamdf['weighted_objective_diff'] = scaled_df['weighted_objective_diff']
+
+selected_columns = ['dragonsoul', 'elders', 'barons', 'heralds', 'towers', 'turretplates', 'inhibitors', 'result']
+
+target = 'result'
+top_n = 20
+corr_matrix = teamdf[selected_columns].corr(numeric_only=True)
+
+top_corr = corr_matrix[target].sort_values(ascending=False).head(top_n)
+subset = corr_matrix.loc[top_corr.index, top_corr.index]
+
+plt.figure(figsize=(12,10))
+ax = sns.heatmap(
+    subset,
+    annot=True,
+    cmap='coolwarm',
+    linewidths=0.5
+)
+
+plt.xticks(rotation=45, ha='right', fontsize=10)
+plt.yticks(fontsize=10)
+plt.title(f'{top_n} Correlations w/ {target}')
+plt.tight_layout()
+plt.show()
+
+#______________
+target = 'result'
+top_n = 20
+corr_matrix = teamdf.corr(numeric_only=True)
+
+top_corr = corr_matrix[target].sort_values(ascending=False).head(top_n)
+subset = corr_matrix.loc[top_corr.index, top_corr.index]
+
+plt.figure(figsize=(12,10))
+ax = sns.heatmap(
+    subset,
+    annot=True,
+    cmap='coolwarm',
+    linewidths=0.5
+)
+
+plt.xticks(rotation=45, ha='right', fontsize=10)
+plt.yticks(fontsize=10)
+plt.title(f'{top_n} Correlations w/ {target}')
+plt.tight_layout()
+plt.show()

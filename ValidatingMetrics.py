@@ -1,8 +1,3 @@
-'''
-Seperate python file for the sake of organization and not having to run a large python file
-Evaluating linearity assumptions of data for feature engineering purposes
-'''
-
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -28,15 +23,15 @@ teamdf['weighted_multikill'] = (
 )
 
 # objective control metric
-# can be improved because I don't think individual dragons matter until a team gets soul or soul point
+teamdf['dragonsoul'] = (teamdf['dragons'] == 4).astype(int)
 teamdf['weighted_objective_diff'] = (
-    (teamdf['dragons'] - teamdf['opp_dragons']) +
-    (teamdf['elders'] - teamdf['opp_elders']) * 2 +
-    (teamdf['heralds'] - teamdf['opp_heralds']) +
+    (teamdf['dragonsoul']) * 3 + 
+    (teamdf['elders'] - teamdf['opp_elders']) * 3 +
     (teamdf['barons'] - teamdf['opp_barons']) * 2 +
+    (teamdf['heralds'] - teamdf['opp_heralds']) +
     (teamdf['towers'] - teamdf['opp_towers']) +
     (teamdf['turretplates'] - teamdf['opp_turretplates']) +
-    (teamdf['inhibitors'] - teamdf['opp_inhibitors']) * 2
+    (teamdf['inhibitors'] - teamdf['opp_inhibitors'])
 )
 
 # game state at 10/15
