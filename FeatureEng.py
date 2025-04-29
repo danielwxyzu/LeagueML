@@ -145,6 +145,8 @@ scaled_df['gamestateat15'] = (scaled_df['golddiffat15'] +
                               scaled_df['killsdiffat15'] +
                               scaled_df['assistdiffat15'] +
                               scaled_df['deathdiffat15'])
+teamdf['gamestateat10'] = scaled_df['gamestateat10']
+teamdf['gamestateat15'] = scaled_df['gamestateat15']
 
 
 # what if you scaled everything and recalculated? would there be a significant difference?
@@ -236,3 +238,5 @@ plt.title(f'{top_n} Correlations w/ {target}')
 plt.tight_layout()
 plt.show()
 
+# export into a new csv with new features
+teamdf.to_csv('teamdfwithfeatures', index = False)
