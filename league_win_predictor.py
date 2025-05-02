@@ -1,74 +1,61 @@
 import pandas as pd
 import numpy as np
+import joblib
 import pickle
 from sklearn.preprocessing import StandardScaler
 
-df = pd.read_csv('Data/teamdfwithfeatures')
+# Load processed dataset
+df = pd.read_csv('Data/teamdf_model_ready.csv')
 
-scaled_features = ['recent_form', 'gspd', 'team kpm']
+# These are the features the model was trained on
+features = ['recent_form', 'weighted_objective_diff', 'gspd', 'team kpm']
 
-scaler = StandardScaler()
-scaler.fit(df[scaled_features])  
+# Load trained model
+model = joblib.load('league_win_predictor.pkl')
 
-with open('scaler.pkl', 'wb') as f:
-    pickle.dump(scaler, f)
-
-#_________________________________________________________
-
-df = pd.read_csv('Data/teamdfwithfeatures') 
-teamdf = df[['result', 'teamname', 'recent_form', 'weighted_objective_diff', 'gspd', 'team kpm']]
-
-with open('league_win_predictor.pkl', 'rb') as f:
-    model = pickle.load(f)
-
-# --- Load your scaler ---
+# Load the scaler
 with open('scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
-# --- Define which features need scaling ---
-scaled_features = ['recent_form', 'gspd', 'team kpm']  # Features you scaled during training
-unscaled_features = ['weighted_objective_diff']        # Feature you should NOT rescale
-
-# --- Function to get a team's features ---
-def prepare_features(team_name):
-    team_row = teamdf[teamdf['teamname'] == team_name]
+# Function to get a team's features
+def get_team_features(team_name):
+    # Try exact match first
+    team_data = df[df['teamname'] == team_name]
     
-    if team_row.empty:
-        print(f"Team '{team_name}' not found in the data!")
+    # If no exact match, try case-insensitive match
+    if team_data.empty:
+        team_data = df[df['teamname'].str.lower() == team_name.lower()]
+    
+    if team_data.empty:
+        print(f"Team '{team_name}' not found in the dataset.")
+        print("Available teams include:", df['teamname'].unique())
         return None
-    
-    # Select features
-    to_scale = team_row[scaled_features]
-    to_leave = team_row[unscaled_features]
-    
-    # Scale necessary features
-    scaled_part = scaler.transform(to_scale)
-    
-    # Combine scaled + unscaled into a single feature array
-    final_features = np.concatenate([scaled_part.flatten(), to_leave.values.flatten()])
-    
-    return final_features
 
-# --- Main Loop for Prediction ---
+    # Get the most recent data point
+    most_recent = team_data.iloc[-1]
+    
+    # Get features in the correct order and format
+    team_features = pd.DataFrame([most_recent[features]], columns=features)
+    return team_features
+
+# Main prediction loop
 while True:
     print("\n--- Win Probability Predictor ---")
-    team1_name = input("Enter Team 1 name (or type 'quit' to exit): ")
+    team1_name = input("Enter Team 1 name (or 'quit' to exit): ")
     if team1_name.lower() == 'quit':
         break
+
     team2_name = input("Enter Team 2 name: ")
 
-    # Get features for both teams
-    team1_features = prepare_features(team1_name)
-    team2_features = prepare_features(team2_name)
+    team1_feat = get_team_features(team1_name)
+    team2_feat = get_team_features(team2_name)
 
-    if team1_features is None or team2_features is None:
-        continue  # If invalid input, restart
+    if team1_feat is None or team2_feat is None:
+        continue
 
-    # Create matchup features (team1 - team2)
-    matchup_features = team1_features - team2_features
+    # Calculate feature difference
+    matchup_features = pd.DataFrame(team1_feat.values - team2_feat.values, columns=features)
 
-    # Predict probability
-    win_probability = model.predict_proba([matchup_features])[0][1]  # probability of class 1 (win)
-
-    # Display result
-    print(f"\nPredicted chance of {team1_name} winning against {team2_name}: {win_probability * 100:.2f}%\n")
+    # Predict and display
+    probability = model.predict_proba(matchup_features)[0][1]
+    print(f"\n{team1_name} has a {probability * 100:.2f}% chance of beating {team2_name}.\n")

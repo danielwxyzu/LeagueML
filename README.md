@@ -1,7 +1,9 @@
 # LeagueML
-A personal project by Daniel, focusing on developing problem solving and data/computer science skills.
+A personal project by Daniel W, focusing on developing problem solving and data/computer science skills.
 
-The main data set used is from Kaggle: https://www.kaggle.com/datasets/barthetur/league-of-legends-2024-competitive-game-dataset/data
+I'm pausing work on the project as of 5/1/25 to learn more about machine learning methods but also develop better programming skills. I'll likely revisit in a month or two after I've done some studying. So far my work is able to return win probabilities with user inputed team names but there are a lot of limitations and errors. The final league_win_predictor was also largely coded using AI but everything else was done manually with my limited knowledge and skill set likely contributing to the highly inaccurate model.
+
+The main data set used is from a League of Legends database: https://oracleselixir.com/tools/downloads
 
 The other data set found within the 'old files' folder is pulled directly from Game of Legends eSports: https://gol.gg/teams/list/season-S15/split-ALL/tournament-ALL/
 

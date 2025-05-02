@@ -1,0 +1,67 @@
+Model Improvement Suggestions for League Win Predictor
+
+1. Feature Scaling Issues
+   - Currently scaling features twice: once in FeatureEngFinal.py and again in predictor
+   - Scaler is being applied to already scaled data, amplifying differences
+   - Consider leaving weighted_objective_diff unscaled
+   - Review scaling methodology for each feature type
+
+2. Feature Difference Calculation
+   - Current raw difference between team features might be too simplistic
+   - Consider using ratios instead of differences for certain features
+   - Recent_form is already probability-like, differences might not be appropriate
+   - Explore different feature comparison methods (e.g., relative strengths)
+
+3. Model Training Issues
+   - Logistic regression might be overfitting to training data
+   - Feature weights in weighted_objective_diff might be too extreme
+   - Consider adding regularization to the model
+   - Review model hyperparameters and training methodology
+
+4. Data Quality Issues
+   - Using only most recent data point might not be representative
+   - Rolling average window of 5 games might be too small
+   - Check for imbalanced classes or outliers
+   - Consider data normalization and outlier treatment
+
+5. Feature Selection
+   - Current features might be too correlated
+   - Consider adding missing important features
+   - Feature interactions aren't being captured
+   - Review feature importance and correlation analysis
+
+Improvement Recommendations:
+
+1. Revise Feature Engineering
+   - Avoid double scaling of features
+   - Use ratios or other transformations instead of raw differences
+   - Add more sophisticated features like team strength ratings
+   - Consider feature-specific scaling approaches
+
+2. Improve Model Training
+   - Add regularization to logistic regression
+   - Try different model architectures
+   - Use cross-validation for hyperparameter tuning
+   - Implement proper train/test/validation splits
+
+3. Enhance Data Processing
+   - Increase window size for rolling averages
+   - Use multiple recent games instead of just most recent
+   - Add historical performance context
+   - Implement proper data validation
+
+4. Add Model Calibration
+   - Use calibration techniques for more realistic probabilities
+   - Consider more sophisticated probability models
+   - Add uncertainty estimates
+   - Implement proper probability calibration
+
+Next Steps:
+1. Review and revise feature engineering pipeline
+2. Implement proper scaling methodology
+3. Add regularization to the model
+4. Consider alternative feature comparison methods
+5. Add more sophisticated team strength metrics
+6. Implement proper model evaluation and validation
+7. Add probability calibration
+8. Consider ensemble methods for more robust predictions 

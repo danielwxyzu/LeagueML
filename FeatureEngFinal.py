@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pickle
 
 teamdf = pd.read_csv('Data/teamdata')
 
@@ -16,15 +17,6 @@ teamdf['recent_form'] = teamdf['recent_form'].fillna(teamdf['result'])
 
 # calculate weighted_objective_diff
 teamdf['dragonsoul'] = (teamdf['dragons'] == 4).astype(int)
-
-temp_binary_columns = ['dragonsoul', 'firsttothreetowers', 'firstmidtower', 'firsttower', 'firstherald', 'firstbaron'] 
-continuous_columns = [col for col in teamdf.select_dtypes('number').columns if col not in temp_binary_columns]
-
-scaler = StandardScaler()
-scaled_continuous = scaler.fit_transform(teamdf[continuous_columns])
-
-scaled_df = teamdf.copy()
-scaled_df[continuous_columns] = scaled_continuous  
 
 weights = {
     'dragonsoul': 0.36,  
@@ -41,16 +33,31 @@ weights = {
     'firstherald': 0.22
 }
 
-# create weighted objective difference, those not appearing here were irrelevant to performance
-scaled_df['weighted_objective_diff'] = (
-    (weights['firstbaron'] * scaled_df['firstbaron']) +
-    (weights['dragonsoul'] * scaled_df['dragonsoul']) +
-    (weights['elders'] * (scaled_df['elders'] - scaled_df['opp_elders'])) +
-    (weights['barons'] * (scaled_df['barons'] - scaled_df['opp_barons'])) +
-    (weights['towers'] * (scaled_df['towers'] - scaled_df['opp_towers'])) +
-    (weights['inhibitors'] * (scaled_df['inhibitors'] - scaled_df['opp_inhibitors']))
+# create weighted objective difference
+teamdf['weighted_objective_diff'] = (
+    (weights['firstbaron'] * teamdf['firstbaron']) +
+    (weights['dragonsoul'] * teamdf['dragonsoul']) +
+    (weights['elders'] * (teamdf['elders'] - teamdf['opp_elders'])) +
+    (weights['barons'] * (teamdf['barons'] - teamdf['opp_barons'])) +
+    (weights['towers'] * (teamdf['towers'] - teamdf['opp_towers'])) +
+    (weights['inhibitors'] * (teamdf['inhibitors'] - teamdf['opp_inhibitors']))
 )
-teamdf['weighted_objective_diff'] = scaled_df['weighted_objective_diff']
 
-# export into a new csv with new features
-teamdf.to_csv('teamdfwithfeatures', index = False)
+# Select and scale features
+features = ['recent_form', 'weighted_objective_diff', 'gspd', 'team kpm']
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(teamdf[features])
+
+# Save the scaler
+with open('scaler.pkl', 'wb') as f:
+    pickle.dump(scaler, f)
+
+# Create final dataset
+final_df = pd.DataFrame(scaled_features, columns=features)
+final_df['result'] = teamdf['result']
+final_df['teamname'] = teamdf['teamname']
+
+# Save final dataset
+final_df.to_csv('Data/teamdf_model_ready.csv', index=False)
+
+
